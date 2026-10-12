@@ -459,13 +459,43 @@
     if (elements.profileScrollCanvas) {
       let lastScrollY = 0;
       let scrollAccumulator = 0;
-      const SCROLL_TICK_THRESHOLD = 52; // Trigger sound tick every ~52px of vertical movement
+      const SCROLL_TICK_THRESHOLD = 32; // Crisp, responsive ~32px steps
       let lastTickTime = 0;
+
+      function handleVerticalMovement(currentScrollTop) {
+        const delta = Math.abs(currentScrollTop - lastScrollY);
+        scrollAccumulator += delta;
+        lastScrollY = currentScrollTop;
+
+        const now = performance.now();
+        if (scrollAccumulator >= SCROLL_TICK_THRESHOLD && (now - lastTickTime > 45)) {
+          scrollAccumulator = 0;
+          lastTickTime = now;
+          const stepIndex = Math.floor(currentScrollTop / SCROLL_TICK_THRESHOLD);
+          AudioEngine.playScrollTick(stepIndex);
+        }
+      }
+
+      let scrollStateTimer = null;
+      function onScrollActivity() {
+        if (!elements.profileScrollCanvas.classList.contains('is-scrolling')) {
+          elements.profileScrollCanvas.classList.add('is-scrolling');
+        }
+        if (document.activeElement && document.activeElement.classList.contains('social-icon-orb')) {
+          document.activeElement.blur();
+        }
+        clearTimeout(scrollStateTimer);
+        scrollStateTimer = setTimeout(function () {
+          elements.profileScrollCanvas.classList.remove('is-scrolling');
+        }, 120);
+      }
 
       elements.profileScrollCanvas.addEventListener('scroll', function () {
         const el = elements.profileScrollCanvas;
         const scrollTop = el.scrollTop;
         const maxScroll = el.scrollHeight - el.clientHeight;
+
+        onScrollActivity();
 
         if (elements.profileScrollProgress && maxScroll > 0) {
           const progress = Math.min(100, Math.max(0, (scrollTop / maxScroll) * 100));
@@ -478,18 +508,7 @@
           elements.portraitVisualBox.style.transform = `translateY(${translateY}px) scale(${scale})`;
         }
 
-        // Haptic audio sound while scrolling
-        const delta = Math.abs(scrollTop - lastScrollY);
-        scrollAccumulator += delta;
-        lastScrollY = scrollTop;
-
-        const now = performance.now();
-        if (scrollAccumulator >= SCROLL_TICK_THRESHOLD && (now - lastTickTime > 65)) {
-          scrollAccumulator = 0;
-          lastTickTime = now;
-          const stepIndex = Math.floor(scrollTop / SCROLL_TICK_THRESHOLD);
-          AudioEngine.playScrollTick(stepIndex);
-        }
+        handleVerticalMovement(scrollTop);
       }, { passive: true });
     }
 
@@ -498,92 +517,106 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 5b. TACTILE HAPTIC AUDIO ENGINE (WEB AUDIO API)
+  // 5b. TACTILE HAPTIC AUDIO ENGINE (WEB AUDIO API — PUNCHY MECHANICAL CLICK)
   // ---------------------------------------------------------------------------
   const AudioEngine = (function () {
     let ctx = null;
 
-    function initContext() {
+    function getContext() {
       if (!ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
           ctx = new AudioCtx();
         }
       }
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(function () {});
-      }
       return ctx;
     }
 
-    // Warm, velvety mechanical haptic click on scroll / hover / snap
+    function ensureUnlocked() {
+      const audioCtx = getContext();
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(function () {});
+      }
+    }
+
+    // Proactively unlock on any gesture
+    const unlockEvents = ['touchstart', 'touchend', 'touchmove', 'pointerdown', 'mousedown', 'click', 'wheel', 'scroll', 'keydown'];
+    unlockEvents.forEach(function (evt) {
+      window.addEventListener(evt, ensureUnlocked, { passive: true, capture: true });
+      document.addEventListener(evt, ensureUnlocked, { passive: true, capture: true });
+    });
+
+    // Synthesize a crisp, distinctly audible mechanical haptic click
     function playScrollTick(step = 0) {
       try {
-        const audioCtx = initContext();
+        const audioCtx = getContext();
         if (!audioCtx) return;
 
-        const now = audioCtx.currentTime;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().then(function () {
+            doPlay(audioCtx, step);
+          }).catch(function () {});
+          return;
+        }
 
-        // Base frequency steps subtly with scroll step (harmonic progression)
-        const baseFreq = 540 + (Math.abs(step) % 4) * 60;
-
-        // Primary impulse
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        const filter = audioCtx.createBiquadFilter();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(baseFreq, now);
-        osc.frequency.exponentialRampToValueAtTime(140, now + 0.038);
-
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(2200, now);
-
-        gain.gain.setValueAtTime(0.18, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.042);
-
-        // Soft sub-harmonic tap for depth
-        const subOsc = audioCtx.createOscillator();
-        const subGain = audioCtx.createGain();
-
-        subOsc.type = 'triangle';
-        subOsc.frequency.setValueAtTime(180, now);
-        subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.028);
-
-        subGain.gain.setValueAtTime(0.12, now);
-        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
-
-        subOsc.connect(subGain);
-        subGain.connect(audioCtx.destination);
-
-        subOsc.start(now);
-        subOsc.stop(now + 0.032);
+        doPlay(audioCtx, step);
       } catch (_) {}
     }
 
-    // Auto-unlock audio on first user touch/click/scroll gesture
-    function unlockAudio() {
-      initContext();
-      window.removeEventListener('touchstart', unlockAudio);
-      window.removeEventListener('pointerdown', unlockAudio);
-      window.removeEventListener('click', unlockAudio);
-      window.removeEventListener('wheel', unlockAudio);
+    function doPlay(audioCtx, step) {
+      try {
+        const now = audioCtx.currentTime;
+
+        // Master gain node
+        const master = audioCtx.createGain();
+        master.gain.setValueAtTime(0.55, now);
+        master.connect(audioCtx.destination);
+
+        // 1. Crisp transient click (sharp mechanical snap)
+        const snapOsc = audioCtx.createOscillator();
+        const snapGain = audioCtx.createGain();
+        snapOsc.type = 'triangle';
+        const snapFreq = 1250 + (Math.abs(step) % 5) * 75;
+        snapOsc.frequency.setValueAtTime(snapFreq, now);
+        snapOsc.frequency.exponentialRampToValueAtTime(320, now + 0.022);
+
+        snapGain.gain.setValueAtTime(0.50, now);
+        snapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.024);
+
+        snapOsc.connect(snapGain);
+        snapGain.connect(master);
+        snapOsc.start(now);
+        snapOsc.stop(now + 0.026);
+
+        // 2. Warm body resonance (gives it solid tactile weight)
+        const bodyOsc = audioCtx.createOscillator();
+        const bodyGain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        bodyOsc.type = 'sine';
+        const bodyFreq = 480 + (Math.abs(step) % 4) * 45;
+        bodyOsc.frequency.setValueAtTime(bodyFreq, now);
+        bodyOsc.frequency.exponentialRampToValueAtTime(160, now + 0.040);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2600, now);
+
+        bodyGain.gain.setValueAtTime(0.45, now);
+        bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.042);
+
+        bodyOsc.connect(filter);
+        filter.connect(bodyGain);
+        bodyGain.connect(master);
+
+        bodyOsc.start(now);
+        bodyOsc.stop(now + 0.045);
+      } catch (_) {}
     }
-    window.addEventListener('touchstart', unlockAudio, { passive: true });
-    window.addEventListener('pointerdown', unlockAudio, { passive: true });
-    window.addEventListener('click', unlockAudio, { passive: true });
-    window.addEventListener('wheel', unlockAudio, { passive: true });
 
     return {
       playScrollTick,
-      initContext
+      ensureUnlocked
     };
   })();
 
@@ -622,13 +655,15 @@
       setTimeout(centerTrack, 50);
     });
 
-    // Tactile sound tick on hover/focus
+    let trackScrollTimer = null;
+
+    // Tactile sound tick on hover/focus (only when idle)
     iconOrbs.forEach(function (orb, index) {
       orb.addEventListener('mouseenter', function () {
-        AudioEngine.playScrollTick(index);
-      });
-      orb.addEventListener('focus', function () {
-        AudioEngine.playScrollTick(index);
+        if (!track.classList.contains('is-scrolling') && !elements.profileScrollCanvas.classList.contains('is-scrolling')) {
+          AudioEngine.ensureUnlocked();
+          AudioEngine.playScrollTick(index);
+        }
       });
     });
 
@@ -639,6 +674,17 @@
     let lastTickTime = 0;
 
     track.addEventListener('scroll', function () {
+      if (!track.classList.contains('is-scrolling')) {
+        track.classList.add('is-scrolling');
+      }
+      if (document.activeElement && document.activeElement.classList.contains('social-icon-orb')) {
+        document.activeElement.blur();
+      }
+      clearTimeout(trackScrollTimer);
+      trackScrollTimer = setTimeout(function () {
+        track.classList.remove('is-scrolling');
+      }, 120);
+
       if (isWrapping) return;
 
       const currentScroll = track.scrollLeft;
@@ -648,10 +694,10 @@
 
       // Play tactile mechanical tick while user is scrolling through icons
       const now = performance.now();
-      if (trackAccumulator >= 42 && now - lastTickTime > 55) {
+      if (trackAccumulator >= 30 && now - lastTickTime > 45) {
         trackAccumulator = 0;
         lastTickTime = now;
-        AudioEngine.playScrollTick(Math.floor(currentScroll / 42));
+        AudioEngine.playScrollTick(Math.floor(currentScroll / 30));
       }
 
       // Seamless infinite loop wrapping
@@ -672,15 +718,18 @@
 
     // Allow vertical mouse wheel to scroll horizontally when over the icon ribbon
     track.addEventListener('wheel', function (e) {
+      AudioEngine.ensureUnlocked();
       const scrollDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (scrollDelta !== 0) {
         track.scrollLeft += scrollDelta;
+        AudioEngine.playScrollTick();
         e.preventDefault();
       }
     }, { passive: false });
 
     // Global mouse wheel delegation for vertical page scrolling on desktop
     window.addEventListener('wheel', function (e) {
+      AudioEngine.ensureUnlocked();
       if (state.currentScreen === 'profile' && elements.profileScrollCanvas) {
         if (e.target && e.target.closest('#infinite-scroll-container')) {
           return; // Let the icon ribbon handle its own horizontal wheel scroll

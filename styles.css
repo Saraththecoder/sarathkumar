@@ -677,17 +677,47 @@ button {
   pointer-events: none;
 }
 
-.social-icon-orb:hover,
-.social-icon-orb:focus-visible {
-  transform: scale(1.15) translateY(-4px);
-  border-color: var(--gold-champagne);
-  color: #FFFFFF;
-  background: radial-gradient(135% 135% at 30% 20%, #2f281c 0%, #17140e 100%);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.85), 0 0 26px rgba(229, 189, 117, 0.48);
+/* Hover effects only on pointer/mouse devices (prevents mobile touch sticky highlight) */
+@media (hover: hover) and (pointer: fine) {
+  .social-icon-orb:hover {
+    transform: scale(1.12) translateY(-3px);
+    border-color: var(--gold-champagne);
+    color: #FFFFFF;
+    background: radial-gradient(135% 135% at 30% 20%, #2f281c 0%, #17140e 100%);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.85), 0 0 26px rgba(229, 189, 117, 0.48);
+  }
+
+  .social-icon-orb:hover::before {
+    opacity: 1;
+  }
+
+  .social-icon-orb:hover svg {
+    transform: scale(1.08);
+  }
 }
 
-.social-icon-orb:hover::before {
-  opacity: 1;
+/* Prevent any highlight while scrolling */
+.is-scrolling .social-icon-orb,
+.social-icon-orb.no-highlight {
+  pointer-events: none !important;
+  transform: none !important;
+  border-color: rgba(229, 189, 117, 0.28) !important;
+  background: radial-gradient(135% 135% at 30% 20%, #1e1b16 0%, #0e0e0e 100%) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+  color: var(--gold-champagne) !important;
+}
+
+.is-scrolling .social-icon-orb::before {
+  opacity: 0 !important;
+}
+
+.social-icon-orb:focus {
+  outline: none;
+}
+
+.social-icon-orb:focus-visible {
+  outline: 2px solid var(--gold-champagne);
+  outline-offset: 4px;
 }
 
 .social-icon-orb:active {
@@ -697,10 +727,6 @@ button {
 .social-icon-orb svg {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: block;
-}
-
-.social-icon-orb:hover svg {
-  transform: scale(1.1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -726,10 +752,14 @@ button {
 
 .footer-college-text {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: clamp(0.56rem, 2.65vw, 0.76rem);
   font-weight: 600;
   color: var(--gold-champagne);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
 }
 
 /* -----------------------------------------------------------------------------

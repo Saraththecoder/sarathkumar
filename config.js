@@ -58,21 +58,21 @@ window.PORTFOLIO_CONFIG = {
         id: "github",
         title: "GitHub",
         subtitle: "Explore my projects",
-        url: "https://github.com/Saraththecoder",
+        url: "https://github.com/sarathkumarbhasa",
         icon: "github"
       },
       {
         id: "instagram",
         title: "Instagram",
         subtitle: "Follow my journey",
-        url: "https://www.instagram.com/sarathkumar_placeholder",
+        url: "https://www.instagram.com/malpsbt3012/",
         icon: "instagram"
       },
       {
         id: "linkedin",
         title: "LinkedIn",
         subtitle: "Let's connect professionally",
-        url: "https://www.linkedin.com/in/sarath-kumar-placeholder",
+        url: "https://www.linkedin.com/in/sarathakumarm3001/",
         icon: "linkedin"
       },
       {
