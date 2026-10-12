@@ -6,6 +6,7 @@ desktop.ini
 # Editor & IDE Directories
 .vscode/
 .idea/
+.qodo/
 *.swp
 *.swo
 

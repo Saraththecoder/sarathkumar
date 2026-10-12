@@ -46,16 +46,19 @@ def generate_qr(url, output_prefix="sarath-id-card-qr"):
     qr.add_data(url)
     qr.make(fit=True)
 
+    output_dir = os.path.join("assets", "qr")
+    os.makedirs(output_dir, exist_ok=True)
+
     # 1. Standard High-Contrast Black & White (Recommended for physical ID card printers)
     img_bw = qr.make_image(fill_color="black", back_color="white")
-    bw_filename = f"{output_prefix}-print-bw.png"
+    bw_filename = os.path.join(output_dir, f"{output_prefix}-print-bw.png")
     img_bw.save(bw_filename)
     print(f"[SUCCESS] High-contrast print version saved to: {bw_filename}")
 
     # 2. Dark-Cinematic Gold Accent Version (Matching website branding)
     try:
         img_gold = qr.make_image(fill_color="#E5BD75", back_color="#050505")
-        gold_filename = f"{output_prefix}-cinematic-gold.png"
+        gold_filename = os.path.join(output_dir, f"{output_prefix}-cinematic-gold.png")
         img_gold.save(gold_filename)
         print(f"[SUCCESS] Dark & Gold themed version saved to: {gold_filename}")
     except Exception as e:

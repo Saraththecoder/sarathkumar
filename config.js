@@ -40,7 +40,7 @@ window.PORTFOLIO_CONFIG = {
   // 2. CINEMATIC VIDEO SPLASH SCREEN SETTINGS
   // ---------------------------------------------------------------------------
   splash: {
-    videoSrc: "splash_screen.mp4",
+    videoSrc: "assets/splash_screen.mp4",
     videoPoster: "assets/video-poster.webp",
     videoDurationSeconds: 7.0,
     enableAutoRedirect: true,
@@ -72,7 +72,7 @@ window.PORTFOLIO_CONFIG = {
         id: "linkedin",
         title: "LinkedIn",
         subtitle: "Let's connect professionally",
-        url: "https://www.linkedin.com/in/sarathakumarm3001/",
+        url: "https://www.linkedin.com/in/sarathakumarm3001",
         icon: "linkedin"
       },
       {
