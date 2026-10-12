@@ -404,6 +404,8 @@
       state.currentScreen = 'profile';
       state.isTransitioning = false;
 
+      window.dispatchEvent(new Event('profileScreenActivated'));
+
       if (updateHistory && window.location.hash !== '#profile') {
         try {
           history.pushState({ screen: 'profile' }, '', '#profile');
@@ -586,93 +588,140 @@
   })();
 
   // ---------------------------------------------------------------------------
-  // 5c. INFINITE SCROLL SOCIAL ICONS CONTROLLER
+  // 5c. USER-CONTROLLED INFINITE SCROLL SOCIAL ICONS CONTROLLER
   // ---------------------------------------------------------------------------
   function setupInfiniteIconScroll() {
     const container = document.getElementById('infinite-scroll-container');
     const track = document.getElementById('infinite-scroll-track');
+    const groups = track ? track.querySelectorAll('.infinite-scroll-group') : [];
     const iconOrbs = document.querySelectorAll('.social-icon-orb');
 
-    if (!container || !track) return;
+    if (!container || !track || groups.length === 0) return;
 
-    // Hover or touch sound feedback on icon orbs
+    let groupWidth = 0;
+
+    function measureGroup() {
+      if (groups[0] && groups[0].offsetWidth > 0) {
+        groupWidth = groups[0].offsetWidth;
+      }
+    }
+
+    // Set scroll position to middle group for seamless bidirectional scrolling
+    function centerTrack() {
+      measureGroup();
+      if (groupWidth > 0) {
+        track.scrollLeft = groupWidth;
+      }
+    }
+
+    setTimeout(centerTrack, 100);
+    window.addEventListener('resize', function () {
+      measureGroup();
+    });
+    window.addEventListener('profileScreenActivated', function () {
+      setTimeout(centerTrack, 50);
+    });
+
+    // Tactile sound tick on hover/focus
     iconOrbs.forEach(function (orb, index) {
       orb.addEventListener('mouseenter', function () {
         AudioEngine.playScrollTick(index);
       });
-      orb.addEventListener('touchstart', function () {
-        AudioEngine.playScrollTick(index);
-      }, { passive: true });
       orb.addEventListener('focus', function () {
         AudioEngine.playScrollTick(index);
       });
     });
 
-    // Touch and Mouse Drag-to-Scroll Support
+    // User horizontal scroll: seamless infinite wrapping + scroll sounds!
+    let lastTrackScroll = track.scrollLeft;
+    let trackAccumulator = 0;
+    let isWrapping = false;
+    let lastTickTime = 0;
+
+    track.addEventListener('scroll', function () {
+      if (isWrapping) return;
+
+      const currentScroll = track.scrollLeft;
+      const delta = Math.abs(currentScroll - lastTrackScroll);
+      trackAccumulator += delta;
+      lastTrackScroll = currentScroll;
+
+      // Play tactile mechanical tick while user is scrolling through icons
+      const now = performance.now();
+      if (trackAccumulator >= 42 && now - lastTickTime > 55) {
+        trackAccumulator = 0;
+        lastTickTime = now;
+        AudioEngine.playScrollTick(Math.floor(currentScroll / 42));
+      }
+
+      // Seamless infinite loop wrapping
+      if (groupWidth > 0) {
+        if (currentScroll >= groupWidth * 2) {
+          isWrapping = true;
+          track.scrollLeft = currentScroll - groupWidth;
+          lastTrackScroll = track.scrollLeft;
+          requestAnimationFrame(function () { isWrapping = false; });
+        } else if (currentScroll <= 12) {
+          isWrapping = true;
+          track.scrollLeft = currentScroll + groupWidth;
+          lastTrackScroll = track.scrollLeft;
+          requestAnimationFrame(function () { isWrapping = false; });
+        }
+      }
+    }, { passive: true });
+
+    // Allow vertical mouse wheel to scroll horizontally when over the icon ribbon
+    track.addEventListener('wheel', function (e) {
+      const scrollDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (scrollDelta !== 0) {
+        track.scrollLeft += scrollDelta;
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // Global mouse wheel delegation for vertical page scrolling on desktop
+    window.addEventListener('wheel', function (e) {
+      if (state.currentScreen === 'profile' && elements.profileScrollCanvas) {
+        if (e.target && e.target.closest('#infinite-scroll-container')) {
+          return; // Let the icon ribbon handle its own horizontal wheel scroll
+        }
+        elements.profileScrollCanvas.scrollTop += e.deltaY;
+      }
+    }, { passive: true });
+
+    // Desktop mouse drag-to-scroll support
     let isDown = false;
     let startX = 0;
+    let startScrollLeft = 0;
     let dragDistance = 0;
-    let lastDragTickX = 0;
 
-    function handleStart(clientX) {
+    track.addEventListener('mousedown', function (e) {
       isDown = true;
-      startX = clientX;
-      lastDragTickX = clientX;
       dragDistance = 0;
-      track.classList.add('paused');
-    }
-
-    function handleMove(clientX) {
-      if (!isDown) return;
-      const diff = clientX - startX;
-      dragDistance = Math.abs(diff);
-
-      // Micro sound tick during manual drag
-      if (Math.abs(clientX - lastDragTickX) > 42) {
-        lastDragTickX = clientX;
-        AudioEngine.playScrollTick(Math.floor(dragDistance / 40));
-      }
-    }
-
-    function handleEnd() {
-      if (!isDown) return;
-      isDown = false;
-      window.setTimeout(function () {
-        track.classList.remove('paused');
-      }, 350);
-    }
-
-    // Desktop mouse events
-    container.addEventListener('mousedown', function (e) {
-      handleStart(e.clientX);
+      startX = e.pageX;
+      startScrollLeft = track.scrollLeft;
+      track.classList.add('dragging');
     });
 
     window.addEventListener('mousemove', function (e) {
-      handleMove(e.clientX);
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX;
+      const walk = (x - startX) * 1.35;
+      dragDistance = Math.abs(walk);
+      track.scrollLeft = startScrollLeft - walk;
     });
 
-    window.addEventListener('mouseup', handleEnd);
-
-    // Mobile touch events
-    container.addEventListener('touchstart', function (e) {
-      if (e.touches && e.touches[0]) {
-        handleStart(e.touches[0].clientX);
-      }
-    }, { passive: true });
-
-    container.addEventListener('touchmove', function (e) {
-      if (e.touches && e.touches[0]) {
-        handleMove(e.touches[0].clientX);
-      }
-    }, { passive: true });
-
-    container.addEventListener('touchend', handleEnd, { passive: true });
-    container.addEventListener('touchcancel', handleEnd, { passive: true });
+    window.addEventListener('mouseup', function () {
+      if (!isDown) return;
+      isDown = false;
+      track.classList.remove('dragging');
+    });
 
     // Prevent link click when dragging was intentional swipe
     iconOrbs.forEach(function (orb) {
       orb.addEventListener('click', function (e) {
-        if (dragDistance > 10) {
+        if (dragDistance > 8) {
           e.preventDefault();
           e.stopPropagation();
         } else {

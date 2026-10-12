@@ -553,9 +553,9 @@ button {
 .connect-header-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 1.1rem;
-  padding: 0 0.5rem;
+  justify-content: space-between;
+  margin-bottom: 0.95rem;
+  padding: 0 0.35rem;
 }
 
 .connect-title-group {
@@ -592,38 +592,45 @@ button {
   white-space: nowrap;
 }
 
-/* Infinite Scroll Ribbon Container with Luxury Edge Gradient Masks */
+.connect-scroll-hint {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* User-Controlled Infinite Scroll Ribbon Container with Luxury Edge Gradient Masks */
 .infinite-scroll-container {
   position: relative;
   width: 100%;
   overflow: hidden;
-  padding: 0.85rem 0 1rem;
+  padding: 0.75rem 0 0.9rem;
   mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
 }
 
 .infinite-scroll-track {
   display: flex;
-  width: max-content;
-  animation: infiniteIconMarquee 14s linear infinite;
-  will-change: transform;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   cursor: grab;
   user-select: none;
+  padding: 0.35rem 0;
 }
 
-.infinite-scroll-container:hover .infinite-scroll-track,
-.infinite-scroll-track.paused,
-.infinite-scroll-track:active {
-  animation-play-state: paused;
+.infinite-scroll-track::-webkit-scrollbar {
+  display: none;
 }
 
-@keyframes infiniteIconMarquee {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(-33.333333%, 0, 0);
-  }
+.infinite-scroll-track.dragging {
+  cursor: grabbing;
 }
 
 /* Group containing the 4 social icons */
