@@ -11,7 +11,7 @@ window.PORTFOLIO_CONFIG = {
     firstName: "D.",
     lastName: "MOHITH",
     wordmark: "M O H I T H",
-    rollNumber: "III AIML",
+    rollNumber: "24AK1A3390",
     emailAddress: "mohith202006@gmail.com",
     role: "Event Co - Coordinator",
     college: "Annamacharya Institute of Technology and Sciences, Tirupati",
@@ -67,7 +67,7 @@ window.PORTFOLIO_CONFIG = {
     ]
   },
   meta: {
-    siteTitle: "D. Mohith | Event Co - Coordinator (III AIML) - AIRA",
-    siteDescription: "D. Mohith (III AIML) — Event Co - Coordinator at AITS Tirupati (AIRA). Planning and conducting workshops, seminars, competitions, hackathons and other club events."
+    siteTitle: "D. Mohith | Event Co - Coordinator - 24AK1A3390",
+    siteDescription: "D. Mohith (Roll No: 24AK1A3390) — Event Co - Coordinator at AITS Tirupati (AIRA). Planning and conducting workshops, seminars, competitions, hackathons and other club events."
   }
 };
