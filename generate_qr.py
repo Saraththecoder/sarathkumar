@@ -70,14 +70,21 @@ def generate_qr(url, output_prefix="sarath-id-card-qr"):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
+    prefix = "sarath-id-card-qr"
+    if len(sys.argv) > 2:
+        target_url = sys.argv[1].strip()
+        prefix = sys.argv[2].strip()
+    elif len(sys.argv) > 1:
         target_url = sys.argv[1].strip()
     else:
-        print("--- Sarath ID Card QR Code Generator ---")
-        target_url = input("Enter your deployed portfolio URL (e.g., https://sarath.pages.dev): ").strip()
+        print("--- AIRA ID Card QR Code Generator ---")
+        target_url = input("Enter deployed portfolio URL (e.g., https://sarathkumar-one.vercel.app): ").strip()
+        user_prefix = input("Enter output prefix (default: sarath-id-card-qr): ").strip()
+        if user_prefix:
+            prefix = user_prefix
 
     if not target_url:
         print("[ERROR] No URL provided. Please provide a valid deployed HTTPS URL.")
         sys.exit(1)
 
-    generate_qr(target_url)
+    generate_qr(target_url, output_prefix=prefix)
