@@ -51,7 +51,11 @@
     profileBio: document.getElementById('profile-bio'),
     connectSection: document.getElementById('connect-with-me-section'),
     connectHeaderRow: document.querySelector('.connect-header-row'),
-    connectLine: document.getElementById('connect-decorator-line'),
+    connectCounterBadge: document.getElementById('connect-counter-badge'),
+    btnCarouselPrev: document.getElementById('btn-carousel-prev'),
+    btnCarouselNext: document.getElementById('btn-carousel-next'),
+    carouselTrack: document.getElementById('connect-carousel-track'),
+    carouselDots: document.querySelectorAll('.carousel-dot'),
     connectCards: document.querySelectorAll('.connect-channel-card'),
     profileFooter: document.getElementById('profile-meta-footer'),
 
@@ -348,21 +352,32 @@
       );
     }
 
-    // 8. Connect With Me Section & Channels
+    // 8. Connect With Me Section & Horizontal Carousel
     if (elements.connectSection) {
       tl.fromTo(
         elements.connectHeaderRow,
-        { opacity: 0, x: -16 },
-        { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' },
+        { opacity: 0, y: -14 },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' },
         startTime + 0.8
       );
 
-      if (elements.connectCards && elements.connectCards.length > 0) {
+      const carouselWrapper = document.querySelector('.connect-carousel-wrapper');
+      if (carouselWrapper) {
         tl.fromTo(
-          elements.connectCards,
-          { opacity: 0, y: 24, scale: 0.96 },
-          { opacity: 1, y: 0, scale: 1, stagger: 0.09, duration: 0.55, ease: 'power3.out' },
+          carouselWrapper,
+          { opacity: 0, x: 24 },
+          { opacity: 1, x: 0, duration: 0.55, ease: 'power3.out' },
           startTime + 0.88
+        );
+      }
+
+      const dotsBar = document.querySelector('.carousel-indicators-bar');
+      if (dotsBar) {
+        tl.fromTo(
+          dotsBar,
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+          startTime + 1.05
         );
       }
     }
@@ -487,6 +502,253 @@
         }
       }, { passive: true });
     });
+
+    // Initialize Horizontal Carousel
+    setupConnectCarousel();
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5b. TACTILE HAPTIC AUDIO ENGINE (WEB AUDIO API)
+  // ---------------------------------------------------------------------------
+  const AudioEngine = (function () {
+    let ctx = null;
+
+    function initContext() {
+      if (!ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          ctx = new AudioCtx();
+        }
+      }
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(function () {});
+      }
+      return ctx;
+    }
+
+    // Warm, velvety mechanical haptic click on card scroll / snap
+    function playScrollTick(step = 0) {
+      try {
+        const audioCtx = initContext();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        // Base frequency steps subtly with card index (harmonic progression)
+        const baseFreq = 520 + (step % 4) * 60;
+
+        // Primary impulse
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.038);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2200, now);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.042);
+
+        // Soft sub-harmonic tap for depth
+        const subOsc = audioCtx.createOscillator();
+        const subGain = audioCtx.createGain();
+
+        subOsc.type = 'triangle';
+        subOsc.frequency.setValueAtTime(180, now);
+        subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.028);
+
+        subGain.gain.setValueAtTime(0.12, now);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+
+        subOsc.connect(subGain);
+        subGain.connect(audioCtx.destination);
+
+        subOsc.start(now);
+        subOsc.stop(now + 0.032);
+      } catch (_) {}
+    }
+
+    // Auto-unlock audio on first touch/interaction
+    function unlockAudio() {
+      initContext();
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    }
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+
+    return {
+      playScrollTick
+    };
+  })();
+
+  // ---------------------------------------------------------------------------
+  // 5c. HORIZONTAL CONNECT CAROUSEL CONTROLLER
+  // ---------------------------------------------------------------------------
+  function setupConnectCarousel() {
+    const track = elements.carouselTrack || document.getElementById('connect-carousel-track');
+    const cards = track ? track.querySelectorAll('.connect-channel-card') : [];
+    const dots = document.querySelectorAll('.carousel-dot');
+    const badge = elements.connectCounterBadge || document.getElementById('connect-counter-badge');
+    const btnPrev = elements.btnCarouselPrev || document.getElementById('btn-carousel-prev');
+    const btnNext = elements.btnCarouselNext || document.getElementById('btn-carousel-next');
+
+    if (!track || cards.length === 0) return;
+
+    let currentIndex = 0;
+    const total = cards.length;
+    let isUserProgrammaticScroll = false;
+
+    function updateActiveState(index, playSound = false) {
+      const prev = currentIndex;
+      currentIndex = Math.max(0, Math.min(total - 1, index));
+
+      if (playSound && currentIndex !== prev) {
+        AudioEngine.playScrollTick(currentIndex);
+      }
+
+      // Update card active classes
+      cards.forEach(function (card, i) {
+        card.classList.toggle('active', i === currentIndex);
+      });
+
+      // Update dots
+      dots.forEach(function (dot, i) {
+        dot.classList.toggle('active', i === currentIndex);
+      });
+
+      // Update counter badge
+      if (badge) {
+        badge.textContent = `${currentIndex + 1} / ${total}`;
+      }
+
+      // Update buttons
+      if (btnPrev) btnPrev.classList.toggle('disabled', currentIndex === 0);
+      if (btnNext) btnNext.classList.toggle('disabled', currentIndex === total - 1);
+    }
+
+    function scrollToIndex(index) {
+      if (index < 0 || index >= total) return;
+      isUserProgrammaticScroll = true;
+      const targetCard = cards[index];
+      if (targetCard) {
+        const left = targetCard.offsetLeft - track.offsetLeft - (track.clientWidth - targetCard.clientWidth) / 2;
+        track.scrollTo({
+          left: Math.max(0, left),
+          behavior: 'smooth'
+        });
+      }
+      AudioEngine.playScrollTick(index);
+      updateActiveState(index, false);
+      setTimeout(function () { isUserProgrammaticScroll = false; }, 420);
+    }
+
+    // Scroll listener with RAF debouncing for swipe snap detection
+    let scrollRaf = null;
+    let lastSnapIndex = 0;
+
+    track.addEventListener('scroll', function () {
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+
+      scrollRaf = requestAnimationFrame(function () {
+        const trackCenter = track.scrollLeft + track.clientWidth / 2;
+        let closestIndex = 0;
+        let minDiff = Infinity;
+
+        cards.forEach(function (card, i) {
+          const cardCenter = card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
+          const diff = Math.abs(trackCenter - cardCenter);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIndex = i;
+          }
+        });
+
+        if (closestIndex !== lastSnapIndex) {
+          lastSnapIndex = closestIndex;
+          if (!isUserProgrammaticScroll) {
+            updateActiveState(closestIndex, true);
+          }
+        }
+      });
+    }, { passive: true });
+
+    // Click on pagination dots
+    dots.forEach(function (dot, i) {
+      dot.addEventListener('click', function (e) {
+        e.preventDefault();
+        scrollToIndex(i);
+      });
+    });
+
+    // Prev / Next button clicks
+    if (btnPrev) {
+      btnPrev.addEventListener('click', function (e) {
+        e.preventDefault();
+        scrollToIndex(currentIndex - 1);
+      });
+    }
+
+    if (btnNext) {
+      btnNext.addEventListener('click', function (e) {
+        e.preventDefault();
+        scrollToIndex(currentIndex + 1);
+      });
+    }
+
+    // Mouse drag-to-scroll support for desktop
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let dragDistance = 0;
+
+    track.addEventListener('mousedown', function (e) {
+      isDown = true;
+      dragDistance = 0;
+      startX = e.pageX - track.offsetLeft;
+      scrollLeft = track.scrollLeft;
+      track.classList.add('dragging');
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (!isDown) return;
+      isDown = false;
+      track.classList.remove('dragging');
+    });
+
+    track.addEventListener('mousemove', function (e) {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - track.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      dragDistance = Math.abs(walk);
+      track.scrollLeft = scrollLeft - walk;
+    });
+
+    // Prevent link click when dragging
+    cards.forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (dragDistance > 8) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+    });
+
+    // Initialize state
+    updateActiveState(0, false);
   }
 
   // ---------------------------------------------------------------------------
