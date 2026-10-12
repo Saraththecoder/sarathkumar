@@ -1,0 +1,17 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor & IDE Directories
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Development & Temp Files
+node_modules/
+__pycache__/
+*.py[cod]
+.env
+.env.local
