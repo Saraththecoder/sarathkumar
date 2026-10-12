@@ -50,20 +50,10 @@
     profileRollTag: document.getElementById('profile-roll-tag'),
     profileBio: document.getElementById('profile-bio'),
     connectSection: document.getElementById('connect-with-me-section'),
-    connectHeaderRow: document.querySelector('.connect-header-row'),
-    connectCounterBadge: document.getElementById('connect-counter-badge'),
-    btnCarouselPrev: document.getElementById('btn-carousel-prev'),
-    btnCarouselNext: document.getElementById('btn-carousel-next'),
-    carouselTrack: document.getElementById('connect-carousel-track'),
-    carouselDots: document.querySelectorAll('.carousel-dot'),
-    connectCards: document.querySelectorAll('.connect-channel-card'),
+    infiniteScrollContainer: document.getElementById('infinite-scroll-container'),
+    infiniteScrollTrack: document.getElementById('infinite-scroll-track'),
+    socialIconOrbs: document.querySelectorAll('.social-icon-orb'),
     profileFooter: document.getElementById('profile-meta-footer'),
-
-    // Social Links
-    linkGithub: document.getElementById('link-github'),
-    linkInstagram: document.getElementById('link-instagram'),
-    linkLinkedin: document.getElementById('link-linkedin'),
-    linkEmail: document.getElementById('link-email'),
 
     // Toast
     toast: document.getElementById('toast-notification'),
@@ -103,13 +93,14 @@
       }
     }
 
-    // Connect Channels
+    // Connect Channels (All cloned infinite-scroll instances)
     if (config.connectWithMe && Array.isArray(config.connectWithMe.links)) {
       config.connectWithMe.links.forEach(function (channel) {
-        if (channel.id === 'github' && elements.linkGithub && channel.url) elements.linkGithub.href = channel.url;
-        if (channel.id === 'instagram' && elements.linkInstagram && channel.url) elements.linkInstagram.href = channel.url;
-        if (channel.id === 'linkedin' && elements.linkLinkedin && channel.url) elements.linkLinkedin.href = channel.url;
-        if (channel.id === 'email' && elements.linkEmail && channel.url) elements.linkEmail.href = channel.url;
+        if (!channel.url) return;
+        const targets = document.querySelectorAll(`[data-channel="${channel.id}"]`);
+        targets.forEach(function (link) {
+          link.href = channel.url;
+        });
       });
     }
   }
@@ -459,11 +450,16 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 5. PROFILE INTERACTIONS (SCROLL PROGRESS, SPOTLIGHT)
+  // 5. PROFILE INTERACTIONS (SCROLL PROGRESS, PAGE SCROLL AUDIO, ORBS)
   // ---------------------------------------------------------------------------
   function setupProfileInteractions() {
-    // Scroll progress bar
+    // Scroll progress bar & Tactile audio tick while scrolling the page
     if (elements.profileScrollCanvas) {
+      let lastScrollY = 0;
+      let scrollAccumulator = 0;
+      const SCROLL_TICK_THRESHOLD = 52; // Trigger sound tick every ~52px of vertical movement
+      let lastTickTime = 0;
+
       elements.profileScrollCanvas.addEventListener('scroll', function () {
         const el = elements.profileScrollCanvas;
         const scrollTop = el.scrollTop;
@@ -479,32 +475,24 @@
           const scale = Math.max(0.92, 1 - scrollTop * 0.0003);
           elements.portraitVisualBox.style.transform = `translateY(${translateY}px) scale(${scale})`;
         }
+
+        // Haptic audio sound while scrolling
+        const delta = Math.abs(scrollTop - lastScrollY);
+        scrollAccumulator += delta;
+        lastScrollY = scrollTop;
+
+        const now = performance.now();
+        if (scrollAccumulator >= SCROLL_TICK_THRESHOLD && (now - lastTickTime > 65)) {
+          scrollAccumulator = 0;
+          lastTickTime = now;
+          const stepIndex = Math.floor(scrollTop / SCROLL_TICK_THRESHOLD);
+          AudioEngine.playScrollTick(stepIndex);
+        }
       }, { passive: true });
     }
 
-    // Card cursor spotlight glow
-    elements.connectCards.forEach(function (card) {
-      function updateSpotlight(clientX, clientY) {
-        const rect = card.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
-      }
-
-      card.addEventListener('mousemove', function (e) {
-        updateSpotlight(e.clientX, e.clientY);
-      });
-
-      card.addEventListener('touchmove', function (e) {
-        if (e.touches && e.touches[0]) {
-          updateSpotlight(e.touches[0].clientX, e.touches[0].clientY);
-        }
-      }, { passive: true });
-    });
-
-    // Initialize Horizontal Carousel
-    setupConnectCarousel();
+    // Initialize Infinite Icon Scroll Track
+    setupInfiniteIconScroll();
   }
 
   // ---------------------------------------------------------------------------
@@ -526,7 +514,7 @@
       return ctx;
     }
 
-    // Warm, velvety mechanical haptic click on card scroll / snap
+    // Warm, velvety mechanical haptic click on scroll / hover / snap
     function playScrollTick(step = 0) {
       try {
         const audioCtx = initContext();
@@ -534,8 +522,8 @@
 
         const now = audioCtx.currentTime;
 
-        // Base frequency steps subtly with card index (harmonic progression)
-        const baseFreq = 520 + (step % 4) * 60;
+        // Base frequency steps subtly with scroll step (harmonic progression)
+        const baseFreq = 540 + (Math.abs(step) % 4) * 60;
 
         // Primary impulse
         const osc = audioCtx.createOscillator();
@@ -578,177 +566,120 @@
       } catch (_) {}
     }
 
-    // Auto-unlock audio on first touch/interaction
+    // Auto-unlock audio on first user touch/click/scroll gesture
     function unlockAudio() {
       initContext();
       window.removeEventListener('touchstart', unlockAudio);
       window.removeEventListener('pointerdown', unlockAudio);
       window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('wheel', unlockAudio);
     }
     window.addEventListener('touchstart', unlockAudio, { passive: true });
     window.addEventListener('pointerdown', unlockAudio, { passive: true });
     window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('wheel', unlockAudio, { passive: true });
 
     return {
-      playScrollTick
+      playScrollTick,
+      initContext
     };
   })();
 
   // ---------------------------------------------------------------------------
-  // 5c. HORIZONTAL CONNECT CAROUSEL CONTROLLER
+  // 5c. INFINITE SCROLL SOCIAL ICONS CONTROLLER
   // ---------------------------------------------------------------------------
-  function setupConnectCarousel() {
-    const track = elements.carouselTrack || document.getElementById('connect-carousel-track');
-    const cards = track ? track.querySelectorAll('.connect-channel-card') : [];
-    const dots = document.querySelectorAll('.carousel-dot');
-    const badge = elements.connectCounterBadge || document.getElementById('connect-counter-badge');
-    const btnPrev = elements.btnCarouselPrev || document.getElementById('btn-carousel-prev');
-    const btnNext = elements.btnCarouselNext || document.getElementById('btn-carousel-next');
+  function setupInfiniteIconScroll() {
+    const container = document.getElementById('infinite-scroll-container');
+    const track = document.getElementById('infinite-scroll-track');
+    const iconOrbs = document.querySelectorAll('.social-icon-orb');
 
-    if (!track || cards.length === 0) return;
+    if (!container || !track) return;
 
-    let currentIndex = 0;
-    const total = cards.length;
-    let isUserProgrammaticScroll = false;
-
-    function updateActiveState(index, playSound = false) {
-      const prev = currentIndex;
-      currentIndex = Math.max(0, Math.min(total - 1, index));
-
-      if (playSound && currentIndex !== prev) {
-        AudioEngine.playScrollTick(currentIndex);
-      }
-
-      // Update card active classes
-      cards.forEach(function (card, i) {
-        card.classList.toggle('active', i === currentIndex);
+    // Hover or touch sound feedback on icon orbs
+    iconOrbs.forEach(function (orb, index) {
+      orb.addEventListener('mouseenter', function () {
+        AudioEngine.playScrollTick(index);
       });
-
-      // Update dots
-      dots.forEach(function (dot, i) {
-        dot.classList.toggle('active', i === currentIndex);
-      });
-
-      // Update counter badge
-      if (badge) {
-        badge.textContent = `${currentIndex + 1} / ${total}`;
-      }
-
-      // Update buttons
-      if (btnPrev) btnPrev.classList.toggle('disabled', currentIndex === 0);
-      if (btnNext) btnNext.classList.toggle('disabled', currentIndex === total - 1);
-    }
-
-    function scrollToIndex(index) {
-      if (index < 0 || index >= total) return;
-      isUserProgrammaticScroll = true;
-      const targetCard = cards[index];
-      if (targetCard) {
-        const left = targetCard.offsetLeft - track.offsetLeft - (track.clientWidth - targetCard.clientWidth) / 2;
-        track.scrollTo({
-          left: Math.max(0, left),
-          behavior: 'smooth'
-        });
-      }
-      AudioEngine.playScrollTick(index);
-      updateActiveState(index, false);
-      setTimeout(function () { isUserProgrammaticScroll = false; }, 420);
-    }
-
-    // Scroll listener with RAF debouncing for swipe snap detection
-    let scrollRaf = null;
-    let lastSnapIndex = 0;
-
-    track.addEventListener('scroll', function () {
-      if (scrollRaf) cancelAnimationFrame(scrollRaf);
-
-      scrollRaf = requestAnimationFrame(function () {
-        const trackCenter = track.scrollLeft + track.clientWidth / 2;
-        let closestIndex = 0;
-        let minDiff = Infinity;
-
-        cards.forEach(function (card, i) {
-          const cardCenter = card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
-          const diff = Math.abs(trackCenter - cardCenter);
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestIndex = i;
-          }
-        });
-
-        if (closestIndex !== lastSnapIndex) {
-          lastSnapIndex = closestIndex;
-          if (!isUserProgrammaticScroll) {
-            updateActiveState(closestIndex, true);
-          }
-        }
-      });
-    }, { passive: true });
-
-    // Click on pagination dots
-    dots.forEach(function (dot, i) {
-      dot.addEventListener('click', function (e) {
-        e.preventDefault();
-        scrollToIndex(i);
+      orb.addEventListener('touchstart', function () {
+        AudioEngine.playScrollTick(index);
+      }, { passive: true });
+      orb.addEventListener('focus', function () {
+        AudioEngine.playScrollTick(index);
       });
     });
 
-    // Prev / Next button clicks
-    if (btnPrev) {
-      btnPrev.addEventListener('click', function (e) {
-        e.preventDefault();
-        scrollToIndex(currentIndex - 1);
-      });
-    }
-
-    if (btnNext) {
-      btnNext.addEventListener('click', function (e) {
-        e.preventDefault();
-        scrollToIndex(currentIndex + 1);
-      });
-    }
-
-    // Mouse drag-to-scroll support for desktop
+    // Touch and Mouse Drag-to-Scroll Support
     let isDown = false;
     let startX = 0;
-    let scrollLeft = 0;
     let dragDistance = 0;
+    let lastDragTickX = 0;
 
-    track.addEventListener('mousedown', function (e) {
+    function handleStart(clientX) {
       isDown = true;
+      startX = clientX;
+      lastDragTickX = clientX;
       dragDistance = 0;
-      startX = e.pageX - track.offsetLeft;
-      scrollLeft = track.scrollLeft;
-      track.classList.add('dragging');
-    });
+      track.classList.add('paused');
+    }
 
-    window.addEventListener('mouseup', function () {
+    function handleMove(clientX) {
+      if (!isDown) return;
+      const diff = clientX - startX;
+      dragDistance = Math.abs(diff);
+
+      // Micro sound tick during manual drag
+      if (Math.abs(clientX - lastDragTickX) > 42) {
+        lastDragTickX = clientX;
+        AudioEngine.playScrollTick(Math.floor(dragDistance / 40));
+      }
+    }
+
+    function handleEnd() {
       if (!isDown) return;
       isDown = false;
-      track.classList.remove('dragging');
+      window.setTimeout(function () {
+        track.classList.remove('paused');
+      }, 350);
+    }
+
+    // Desktop mouse events
+    container.addEventListener('mousedown', function (e) {
+      handleStart(e.clientX);
     });
 
-    track.addEventListener('mousemove', function (e) {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - track.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      dragDistance = Math.abs(walk);
-      track.scrollLeft = scrollLeft - walk;
+    window.addEventListener('mousemove', function (e) {
+      handleMove(e.clientX);
     });
 
-    // Prevent link click when dragging
-    cards.forEach(function (card) {
-      card.addEventListener('click', function (e) {
-        if (dragDistance > 8) {
+    window.addEventListener('mouseup', handleEnd);
+
+    // Mobile touch events
+    container.addEventListener('touchstart', function (e) {
+      if (e.touches && e.touches[0]) {
+        handleStart(e.touches[0].clientX);
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', function (e) {
+      if (e.touches && e.touches[0]) {
+        handleMove(e.touches[0].clientX);
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchend', handleEnd, { passive: true });
+    container.addEventListener('touchcancel', handleEnd, { passive: true });
+
+    // Prevent link click when dragging was intentional swipe
+    iconOrbs.forEach(function (orb) {
+      orb.addEventListener('click', function (e) {
+        if (dragDistance > 10) {
           e.preventDefault();
           e.stopPropagation();
+        } else {
+          AudioEngine.playScrollTick();
         }
       });
     });
-
-    // Initialize state
-    updateActiveState(0, false);
   }
 
   // ---------------------------------------------------------------------------

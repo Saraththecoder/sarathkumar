@@ -58,7 +58,7 @@ window.PORTFOLIO_CONFIG = {
         id: "github",
         title: "GitHub",
         subtitle: "Explore my projects",
-        url: "https://github.com/sarathkumar-placeholder",
+        url: "https://github.com/Saraththecoder",
         icon: "github"
       },
       {
