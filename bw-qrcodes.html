@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIRA ID Card QR Codes — Physical Print Sheet (All 15 Members)</title>
+  <meta name="description" content="Complete printable B&W QR code collection for all 15 AIRA club leads and coordinators at AITS Tirupati.">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --card-bg: #121216;
+      --border: rgba(229, 189, 117, 0.25);
+      --gold: #E5BD75;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2.5rem 1.5rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 1.75rem;
+    }
+
+    .aira-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      background: rgba(229, 189, 117, 0.12);
+      border: 1px solid rgba(229, 189, 117, 0.3);
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 0.85rem;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 680px;
+      margin: 0 auto 1.5rem auto;
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #E5BD75 0%, #C99738 100%);
+      color: #000;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(229, 189, 117, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: none;
+    }
+
+    /* Grid of ID Card QR Badges */
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .qr-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      position: relative;
+    }
+
+    .qr-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--gold);
+    }
+
+    .card-number {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.85rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(229, 189, 117, 0.12);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .qr-image-wrapper {
+      background: #ffffff;
+      padding: 0.75rem;
+      border-radius: 10px;
+      margin: 0.75rem 0 1rem 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-image {
+      width: 160px;
+      height: 160px;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .member-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 0.25rem;
+    }
+
+    .member-role {
+      font-size: 0.82rem;
+      color: var(--gold);
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .member-roll {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .member-link {
+      font-size: 0.75rem;
+      color: #8ab4f8;
+      text-decoration: none;
+      word-break: break-all;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      width: 100%;
+      transition: background 0.15s ease;
+    }
+
+    .member-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      text-decoration: underline;
+    }
+
+    /* Print Stylesheet for Physical ID Card Printing */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+
+      header .actions, header .subtitle {
+        display: none !important;
+      }
+
+      header {
+        border-bottom: 2px solid #000 !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 0.5rem !important;
+      }
+
+      h1 {
+        color: #000 !important;
+        font-size: 1.5rem !important;
+      }
+
+      .aira-badge {
+        color: #000 !important;
+        border-color: #000 !important;
+        background: transparent !important;
+      }
+
+      .qr-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 12px !important;
+      }
+
+      .qr-card {
+        background: #ffffff !important;
+        border: 1px solid #333333 !important;
+        border-radius: 6px !important;
+        padding: 8px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow: none !important;
+      }
+
+      .card-number {
+        color: #000 !important;
+        background: #eee !important;
+      }
+
+      .qr-image-wrapper {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        padding: 4px !important;
+        margin: 4px 0 !important;
+      }
+
+      .qr-image {
+        width: 120px !important;
+        height: 120px !important;
+      }
+
+      .member-name {
+        color: #000 !important;
+        font-size: 0.9rem !important;
+      }
+
+      .member-role {
+        color: #333 !important;
+        font-size: 0.75rem !important;
+      }
+
+      .member-roll {
+        color: #666 !important;
+        font-size: 0.7rem !important;
+      }
+
+      .member-link {
+        color: #000 !important;
+        background: transparent !important;
+        border: none !important;
+        font-size: 0.65rem !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="aira-badge">AITS Tirupati · AIRA Association</span>
+      <h1>Physical ID Card QR Print Sheet</h1>
+      <p class="subtitle">
+        High-contrast print-ready QR codes for all 15 AIRA team members. Standard Black &amp; White high-error-correction (Level H) matrix for physical plastic ID cards.
+      </p>
+      <div class="actions">
+        <button class="btn" onclick="window.print()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print / Save as PDF
+        </button>
+        <a class="btn btn-secondary" href="https://sarathkumar-one.vercel.app/" target="_blank">
+          View Main Portal
+        </a>
+      </div>
+    </header>
+
+    <main class="qr-grid">
+      <!-- 1. Bhasa Sarath Kumar -->
+      <div class="qr-card">
+        <span class="card-number">#01</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/sarath-id-card-qr-print-bw.png" alt="QR Code for Bhasa Sarath Kumar">
+        </div>
+        <h2 class="member-name">Bhasa Sarath Kumar</h2>
+        <p class="member-role">Technical Lead</p>
+        <p class="member-roll">Roll No: 24AK1A33D8</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/" target="_blank">sarathkumar-one.vercel.app</a>
+      </div>
+
+      <!-- 2. D. Mohith -->
+      <div class="qr-card">
+        <span class="card-number">#02</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/mohith-id-card-qr-print-bw.png" alt="QR Code for D. Mohith">
+        </div>
+        <h2 class="member-name">D. Mohith</h2>
+        <p class="member-role">Event Co - Coordinator</p>
+        <p class="member-roll">Roll No: 24AK1A3390</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/mohith" target="_blank">.../mohith</a>
+      </div>
+
+      <!-- 3. M. Saranya -->
+      <div class="qr-card">
+        <span class="card-number">#03</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/saranya-id-card-qr-print-bw.png" alt="QR Code for M. Saranya">
+        </div>
+        <h2 class="member-name">M. Saranya</h2>
+        <p class="member-role">Event Coordinator</p>
+        <p class="member-roll">Roll No: 24AK1A33D7</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/saranya" target="_blank">.../saranya</a>
+      </div>
+
+      <!-- 4. K. Sri Valli -->
+      <div class="qr-card">
+        <span class="card-number">#04</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/srivalli-id-card-qr-print-bw.png" alt="QR Code for K. Sri Valli">
+        </div>
+        <h2 class="member-name">K. Sri Valli</h2>
+        <p class="member-role">Registration Coordinator</p>
+        <p class="member-roll">Roll No: 24AK1A33F5</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/srivalli" target="_blank">.../srivalli</a>
+      </div>
+
+      <!-- 5. Sravan A -->
+      <div class="qr-card">
+        <span class="card-number">#05</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/sravan-id-card-qr-print-bw.png" alt="QR Code for Sravan A">
+        </div>
+        <h2 class="member-name">Sravan A</h2>
+        <p class="member-role">Logistics Coordinator</p>
+        <p class="member-roll">Roll No: 24AK1A33F4</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/sravan" target="_blank">.../sravan</a>
+      </div>
+
+      <!-- 6. K. Bhavana -->
+      <div class="qr-card">
+        <span class="card-number">#06</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/bhavana-id-card-qr-print-bw.png" alt="QR Code for K. Bhavana">
+        </div>
+        <h2 class="member-name">K. Bhavana</h2>
+        <p class="member-role">Student Lead</p>
+        <p class="member-roll">Roll No: 24AK1A3311</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/bhavana" target="_blank">.../bhavana</a>
+      </div>
+
+      <!-- 7. B Charishma Reddy -->
+      <div class="qr-card">
+        <span class="card-number">#07</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/charishma-id-card-qr-print-bw.png" alt="QR Code for B Charishma Reddy">
+        </div>
+        <h2 class="member-name">B Charishma Reddy</h2>
+        <p class="member-role">Student Co-Lead</p>
+        <p class="member-roll">Roll No: 24AK1A3321</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/charishma" target="_blank">.../charishma</a>
+      </div>
+
+      <!-- 8. J Monish Kumar -->
+      <div class="qr-card">
+        <span class="card-number">#08</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/monish-id-card-qr-print-bw.png" alt="QR Code for J Monish Kumar">
+        </div>
+        <h2 class="member-name">J Monish Kumar</h2>
+        <p class="member-role">Student Co-Lead</p>
+        <p class="member-roll">Roll No: 24AK1A3360</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/monish" target="_blank">.../monish</a>
+      </div>
+
+      <!-- 9. Mr. A. Charan Tej -->
+      <div class="qr-card">
+        <span class="card-number">#09</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/charan-id-card-qr-print-bw.png" alt="QR Code for Mr. A. Charan Tej">
+        </div>
+        <h2 class="member-name">Mr. A. Charan Tej</h2>
+        <p class="member-role">Promotion Lead</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/charan" target="_blank">.../charan</a>
+      </div>
+
+      <!-- 10. Mr. P. Balaji -->
+      <div class="qr-card">
+        <span class="card-number">#10</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/balaji-id-card-qr-print-bw.png" alt="QR Code for Mr. P. Balaji">
+        </div>
+        <h2 class="member-name">Mr. P. Balaji</h2>
+        <p class="member-role">Social Media Coordinator</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/balaji" target="_blank">.../balaji</a>
+      </div>
+
+      <!-- 11. Mr. S. M. Muwaz -->
+      <div class="qr-card">
+        <span class="card-number">#11</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/muwaz-id-card-qr-print-bw.png" alt="QR Code for Mr. S. M. Muwaz">
+        </div>
+        <h2 class="member-name">Mr. S. M. Muwaz</h2>
+        <p class="member-role">Marketing &amp; Outreach</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/muwaz" target="_blank">.../muwaz</a>
+      </div>
+
+      <!-- 12. Mr. G. Bhanu Prakash Reddy -->
+      <div class="qr-card">
+        <span class="card-number">#12</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/bhanu-id-card-qr-print-bw.png" alt="QR Code for Mr. G. Bhanu Prakash Reddy">
+        </div>
+        <h2 class="member-name">Mr. G. Bhanu Prakash Reddy</h2>
+        <p class="member-role">Content &amp; Publicity Coordinator</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/bhanu" target="_blank">.../bhanu</a>
+      </div>
+
+      <!-- 13. Mr. B. Poojan Sai -->
+      <div class="qr-card">
+        <span class="card-number">#13</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/poojan-id-card-qr-print-bw.png" alt="QR Code for Mr. B. Poojan Sai">
+        </div>
+        <h2 class="member-name">Mr. B. Poojan Sai</h2>
+        <p class="member-role">Technical Projects Coordinator</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/poojan" target="_blank">.../poojan</a>
+      </div>
+
+      <!-- 14. Mr. S. M. Zunaid -->
+      <div class="qr-card">
+        <span class="card-number">#14</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/zunaid-id-card-qr-print-bw.png" alt="QR Code for Mr. S. M. Zunaid">
+        </div>
+        <h2 class="member-name">Mr. S. M. Zunaid</h2>
+        <p class="member-role">Research Coordinator</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/zunaid" target="_blank">.../zunaid</a>
+      </div>
+
+      <!-- 15. Mr. N Uday -->
+      <div class="qr-card">
+        <span class="card-number">#15</span>
+        <div class="qr-image-wrapper">
+          <img class="qr-image" src="assets/qr/uday-id-card-qr-print-bw.png" alt="QR Code for Mr. N Uday">
+        </div>
+        <h2 class="member-name">Mr. N Uday</h2>
+        <p class="member-role">Technical Content Coordinator</p>
+        <p class="member-roll">Class: III AIML</p>
+        <a class="member-link" href="https://sarathkumar-one.vercel.app/uday" target="_blank">.../uday</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
